@@ -59,7 +59,8 @@ public class LibraryUI extends JFrame {
 
         addBtn.addActionListener(e -> {
             try {
-                service.addBook(title.getText(), author.getText());
+                Book book = new Book(0, title.getText(), author.getText());
+                service.addBook(book);
                 loadBooks();
             } catch (Exception ex) {
                 showError(ex);
@@ -116,7 +117,8 @@ public class LibraryUI extends JFrame {
 
         add.addActionListener(e -> {
             try {
-                service.addUser(name.getText(), email.getText());
+                User user = new User(0, name.getText(), email.getText());
+                service.addUser(user);
                 loadUsers(userModel);
             } catch (Exception ex) {
                 showError(ex);
@@ -165,33 +167,31 @@ public class LibraryUI extends JFrame {
 
     // ---------------- LOAD DATA ----------------
     private void loadBooks() {
-        try {
-            tableModel.setRowCount(0);
-            ResultSet rs = DBConnection.getConnection().createStatement().executeQuery("SELECT * FROM books");
+    try {
+        tableModel.setRowCount(0);
 
-            while (rs.next()) {
-                tableModel.addRow(new Object[]{
-                        rs.getInt("book_id"),
-                        rs.getString("title"),
-                        rs.getString("author"),
-                        rs.getBoolean("available") ? "Yes" : "No"
-                });
-            }
-        } catch (Exception e) {
-            showError(e);
+        for (Book b : service.getBooks()) {
+            tableModel.addRow(new Object[]{
+                b.getBookId(),
+                b.getTitle(),
+                b.getAuthor(),
+                b.isAvailable() ? "Yes" : "No"
+            });
         }
+    } catch (Exception e) {
+        showError(e);
     }
+}
 
     private void loadUsers(DefaultTableModel model) {
         try {
             model.setRowCount(0);
-            ResultSet rs = DBConnection.getConnection().createStatement().executeQuery("SELECT * FROM users");
 
-            while (rs.next()) {
+            for (User u : service.getUsers()) {
                 model.addRow(new Object[]{
-                        rs.getInt("user_id"),
-                        rs.getString("name"),
-                        rs.getString("email")
+                    u.getUserId(),
+                    u.getName(),
+                    u.getEmail()
                 });
             }
         } catch (Exception e) {
@@ -202,16 +202,15 @@ public class LibraryUI extends JFrame {
     private void loadRecords(DefaultTableModel model) {
         try {
             model.setRowCount(0);
-            ResultSet rs = service.getRecords();
 
-            while (rs.next()) {
+            for (BorrowRecord r : service.getRecords()) {
                 model.addRow(new Object[]{
-                        rs.getInt("record_id"),
-                        rs.getString("title"),
-                        rs.getString("name"),
-                        rs.getDate("issue_date"),
-                        rs.getDate("due_date"),
-                        rs.getDate("return_date")
+                    r.getRecordId(),
+                    r.getBook().getTitle(),
+                    r.getUser().getName(),
+                    r.getIssueDate(),
+                    r.getDueDate(),
+                    r.getReturnDate()
                 });
             }
         } catch (Exception e) {
